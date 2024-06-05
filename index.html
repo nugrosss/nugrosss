@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hand Tracking Game</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+            flex-direction: column;
+        }
+        #score {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 24px;
+            color: magenta;
+        }
+        #status {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 48px;
+            color: red;
+            display: none;
+        }
+        img {
+            border: 1px solid black;
+        }
+        #resetButton {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+   
+    <div id="status">Game Over!</div>
+    <img id="video" src="{{ url_for('video_feed') }}" width="640" height="480">
+    <button id="resetButton">Reset Game</button>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.2.0/socket.io.js"></script>
+    <script>
+        const socket = io.connect('http://' + document.domain + ':' + location.port);
+
+        socket.on('connect', function() {
+            console.log('Connected');
+        });
+
+        socket.on('enemy_position', function(data) {
+            console.log('Enemy position:', data);
+        });
+
+        const video = document.getElementById('video');
+        const status = document.getElementById('status');
+        const resetButton = document.getElementById('resetButton');
+
+        resetButton.addEventListener('click', function() {
+            socket.emit('reset_game');
+            status.style.display = 'none';
+        });
+
+        socket.on('end_game', function(data) {
+            if (data.status === 'win') {
+                status.innerText = 'You Win!';
+            } else {
+                status.innerText = 'Game Over!';
+            }
+            status.style.display = 'block';
+        });
+
+        socket.on('reset', function() {
+            location.reload();
+        });
+    </script>
+</body>
+</html>
